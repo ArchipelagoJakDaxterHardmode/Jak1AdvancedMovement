@@ -26,6 +26,7 @@ from PyMemoryEditor import OpenProcess, ProcessNotFoundError
 
 # Jak imports
 from .game_id import jak1_name, jak1_gk, jak1_goalc
+from .locs import cell_locations
 from .options import EnableOrbsanity
 from .agents.memory_reader import JakAndDaxterMemoryReader
 from .agents.repl_client import JakAndDaxterReplClient
@@ -195,6 +196,9 @@ class JakAndDaxterContext(CommonContext):
             # This allows us to "remember" the user's choice.
             self.on_deathlink_toggle()
 
+            # Request location info for all traders
+            create_task_log_exception(self.request_location_scouts())
+
         if cmd == "Retrieved":
             if f"jakanddaxter_{self.auth}_orbs_paid" in args["keys"]:
                 orbs_traded = args["keys"][f"jakanddaxter_{self.auth}_orbs_paid"]
@@ -219,6 +223,15 @@ class JakAndDaxterContext(CommonContext):
             for index, item in enumerate(args["items"], start=args["index"]):
                 logger.debug(f"index: {str(index)}, item: {str(item)}")
                 self.repl.item_inbox[index] = item
+
+        logger.debug(f"Received {cmd}.")
+        if cmd == "LocationInfo":
+            for i, location in enumerate(args["locations"]):
+                player_name = self.player_names[location.player]
+                item_name = self.item_names.lookup_in_slot(location.item)
+                location_id = location.location
+                logger.debug(f"Item hint {i}")
+                create_task_log_exception(self.repl.write_location_hint(i, item_name, player_name))
 
     async def json_to_game_text(self, args: dict):
         if "type" in args and args["type"] in {"ItemSend"}:
@@ -280,6 +293,11 @@ class JakAndDaxterContext(CommonContext):
 
     def on_finish_check(self):
         create_task_log_exception(self.ap_inform_finished_game())
+
+    async def request_location_scouts(self):
+        trade_cell_ids = [11, 12, 13, 14, 31, 32, 33, 34, 35, 96, 97, 98, 99, 100, 101]
+        message = [{"cmd": "LocationScouts", "locations": [cell_locations.to_ap_id(cell_id) for cell_id in trade_cell_ids], "create_as_hint": 0}]
+        await self.send_msgs(message)
 
     # We need to do a little more than just use CommonClient's send_death.
     async def ap_inform_deathlink(self):

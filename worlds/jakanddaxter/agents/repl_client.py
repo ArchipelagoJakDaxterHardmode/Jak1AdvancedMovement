@@ -314,6 +314,14 @@ class JakAndDaxterReplClient:
                      f" {self.sanitize_game_text(data.their_item_owner)})")
         await self.send_form(f"(begin {body} (none))", print_ok=False)
 
+    async def write_location_hint(self, index, item_name, player_name):
+        logger.debug(f"Sending item hint {index}: {item_name}!")
+        body = (f" (set-item-hint (-> *ap-messenger* 0) "
+                f" {index} "
+                f" {self.sanitize_game_text(item_name)} "
+                f" {self.sanitize_game_text(player_name)})")
+        await self.send_form(f"(begin {body} (none))", print_ok=False)
+
     async def receive_item(self):
         ap_id = getattr(self.item_inbox[self.inbox_index], "item")
 
