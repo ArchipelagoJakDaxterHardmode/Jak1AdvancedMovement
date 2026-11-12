@@ -36,7 +36,8 @@ def build_regions(level_name: str, world: "JakAndDaxterWorld") -> JakAndDaxterRe
                                     world.can_free_scout_flies_crouch_trick(state, player)
                                     or (state.has("Blue Eco", player)
                                         and (state.has("Double Jump", player)
-                                             or state.has_all(("Crouch", "Crouch Jump"), player))))
+                                             or state.has_all(("Crouch", "Crouch Jump"), player)
+                                             or world.can_high_jump_or_roll_jump(state, player))))
 
     orb_cache_cliff = JakAndDaxterRegion("Orb Cache Cliff", player, multiworld, level_name, 15)
     orb_cache_cliff.add_cache_locations([10344])
@@ -61,17 +62,20 @@ def build_regions(level_name: str, world: "JakAndDaxterWorld") -> JakAndDaxterRe
                           state.has("Blue Eco", player)
                           and (state.has("Double Jump", player)
                                or state.has_all(("Crouch", "Crouch Jump"), player)
+                               or world.can_high_jump_or_roll_jump(state, player)
                                or state.has_all(("Crouch", "Crouch Uppercut", "Jump Kick"), player)))
 
     if options.crouch_trick:
         main_area.connect(yakow_cliff, rule=lambda state:
                           state.has("Double Jump", player)
                           or state.has("Crouch Jump", player)
+                          or world.can_high_jump_or_roll_jump(state, player)
                           or state.has_all(("Crouch Uppercut", "Jump Kick"), player))
     else:
         main_area.connect(yakow_cliff, rule=lambda state:
                           state.has("Double Jump", player)
                           or state.has_all(("Crouch", "Crouch Jump"), player)
+                          or world.can_high_jump_or_roll_jump(state, player)
                           or state.has_all(("Crouch", "Crouch Uppercut", "Jump Kick"), player))
 
     main_area.connect(oracle_platforms, rule=lambda state:
